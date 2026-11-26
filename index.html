@@ -2,163 +2,287 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Act 647 Rabies & Stray Control - Gesture Game</title>
+  <title>Act 647: TikTok Trend Gesture Challenge</title>
   <style>
-    body { font-family: 'Segoe UI', sans-serif; background: #0f172a; color: #f8fafc; text-align: center; margin: 0; padding: 20px; }
-    .container { max-width: 720px; margin: auto; background: #1e293b; padding: 20px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.4); }
-    video { width: 320px; height: 240px; border-radius: 12px; transform: scaleX(-1); border: 3px solid #38bdf8; background: #000; }
-    .question-box { background: #334155; padding: 15px; border-radius: 12px; margin: 15px 0; }
-    .options { display: flex; gap: 15px; justify-content: center; margin-top: 10px; }
-    .opt { flex: 1; padding: 12px; border-radius: 10px; background: #475569; border: 2px solid transparent; transition: 0.2s; }
-    .opt.active { border-color: #facc15; background: #854d0e; }
-    .status { font-weight: bold; color: #38bdf8; margin: 10px 0; font-size: 1.1em; }
-    button { background: #38bdf8; color: #0f172a; border: none; padding: 10px 20px; font-weight: bold; border-radius: 8px; cursor: pointer; font-size: 1em; }
+    body { font-family: 'Segoe UI', sans-serif; background: #090d16; color: #f8fafc; text-align: center; margin: 0; padding: 15px; }
+    .container { max-width: 780px; margin: auto; background: #161f33; padding: 20px; border-radius: 18px; border: 2px solid #38bdf8; box-shadow: 0 10px 30px rgba(0,0,0,0.6); }
+    .cam-wrapper { position: relative; display: inline-block; margin-top: 10px; }
+    video { width: 380px; height: 285px; border-radius: 14px; transform: scaleX(-1); border: 3px solid #facc15; background: #000; }
+    .badge-live { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); background: rgba(250, 204, 21, 0.95); color: #090d16; font-weight: 900; padding: 5px 15px; border-radius: 20px; font-size: 0.9em; white-space: nowrap; }
+    .progress-bar { width: 380px; height: 10px; background: #334155; border-radius: 10px; margin: 8px auto; overflow: hidden; }
+    .progress-fill { height: 100%; width: 0%; background: #22c55e; transition: width 0.1s; }
+    .question-box { background: #1e293b; padding: 18px; border-radius: 14px; margin-top: 12px; border: 1px solid #334155; }
+    .options { display: flex; gap: 15px; justify-content: center; margin-top: 12px; }
+    .opt { flex: 1; padding: 14px; border-radius: 12px; background: #334155; border: 3px solid transparent; transition: 0.2s; }
+    .opt.active { border-color: #22c55e; background: #14532d; transform: scale(1.03); }
+    .dance-tag { display: inline-block; background: #facc15; color: #090d16; font-weight: 800; padding: 3px 10px; border-radius: 8px; margin-bottom: 6px; font-size: 0.9em; }
+    .status { font-weight: bold; color: #38bdf8; margin: 8px 0; font-size: 1.05em; }
+    .ref-tag { font-size: 0.85em; color: #94a3b8; margin-top: 10px; display: block; }
+    button { background: #facc15; color: #090d16; border: none; padding: 12px 24px; font-weight: 900; border-radius: 10px; cursor: pointer; font-size: 1em; }
   </style>
 </head>
 <body>
 
 <div class="container">
-  <h2>🐾 Act 647 Gesture Challenge: Rabies & Stray Control</h2>
-  <p>Show <b>1 Finger (☝️)</b> for Option A or <b>2 Fingers (✌️)</b> for Option B and hold for 1.5 seconds!</p>
+  <h2>🕺 Act 647: TikTok Motion & Veterinary Law Challenge</h2>
+  <p>Perform the <b>exact TikTok trend pose</b> shown on Option A or Option B and hold it until the green bar fills up!</p>
+
+  <button id="startBtn">🎥 Enable Webcam & Load AI Models</button>
   
-  <button id="startBtn">Enable Webcam & Start Game</button>
-  <div style="margin-top:15px;">
+  <div class="cam-wrapper">
     <video id="webcam" autoplay playsinline></video>
+    <div class="badge-live" id="motionBadge">Waiting for camera...</div>
   </div>
-  <div class="status" id="statusText">Waiting for camera...</div>
+  <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+  
+  <div class="status" id="statusText">Click the button above to start</div>
 
   <div class="question-box" id="quizArea" style="display:none;">
-    <h3 id="qTitle">Question 1</h3>
-    <p id="qText"></p>
+    <h3 id="qTitle">Case 1</h3>
+    <p id="qText" style="font-size:1.05em;"></p>
     <div class="options">
-      <div class="opt" id="optA">☝️ <b>Option A:</b> <span id="textA"></span></div>
-      <div class="opt" id="optB">✌️ <b>Option B:</b> <span id="textB"></span></div>
+      <div class="opt" id="optA">
+        <span class="dance-tag" id="danceA">Dance A</span><br>
+        <b>Option A:</b> <span id="textA"></span>
+      </div>
+      <div class="opt" id="optB">
+        <span class="dance-tag" id="danceB">Dance B</span><br>
+        <b>Option B:</b> <span id="textB"></span>
+      </div>
     </div>
+    <span class="ref-tag" id="refText">Use BOTH hands clearly in front of the camera!</span>
   </div>
 </div>
 
 <script type="module">
-  import { HandLandmarker, FilesetResolver } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3";
+  import { HandLandmarker, FaceLandmarker, FilesetResolver } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3";
 
   const questions = [
     {
-      q: "Rabies is confirmed in District X. A resident wants to bring their healthy dog out of the area. What is required under Act 647?",
-      a: "Written Movement Permit from DVS",
-      b: "Nothing, as long as the dog looks healthy",
-      correct: 1
+      q: "Case 1 (Section 38): During a district inspection, a resident owns an unlicensed 5-month-old dog and an unlicensed cat. Who commits a statutory licensing offense under Act 647?",
+      a: "Dog owner only (Cats are exempted from dog licensing)",
+      b: "Both dog and cat owners are fined under Section 38",
+      gestureA: "67", labelA: "⚖️ DO THE 6-7 DANCE (Alternate hands up/down)",
+      gestureB: "SCUBA", labelB: "🤿 DO SCUBA TREND (Pinch nose + wave fish hand)",
+      correct: "A",
+      ref: "Ref: Animals Act 1953 (Act 647), Section 38(1) & (4) — Fine up to RM1,000 for unlicensed dogs; cats exempted."
     },
     {
-      q: "During house-to-house checks, you find an unlicensed adult dog and an unlicensed cat. Under Section 38, who is liable?",
-      a: "Both dog and cat owners are fined",
-      b: "Only the dog owner (cats are exempted)",
-      correct: 2
+      q: "Case 2 (Sections 39 & 40): A Rabies Order is gazetted in your district. Unlicensed stray dogs are roaming the market. What statutory power applies?",
+      a: "Seize or destroy stray/uncontrolled dogs under Sec 39 & 40",
+      b: "Only issue warnings; stray dogs cannot be destroyed",
+      gestureA: "CATEARS", labelA: "🐱 CAT EARS POSE (Both hands above your head)",
+      gestureB: "67", labelB: "⚖️ DO THE 6-7 DANCE (Alternate hands up/down)",
+      correct: "A",
+      ref: "Ref: Animals Act 1953 (Act 647), Sections 39 & 40 — Destruction/detention of stray dogs & emergency Rabies Orders."
     },
     {
-      q: "Unlicensed stray dogs are roaming a rabies-infected market. Which sections empower DVS to seize/destroy stray dogs?",
-      a: "Sections 39 & 40",
-      b: "Section 38 only",
-      correct: 1
+      q: "Case 3 (Section 36): A pet owner wants to transport their healthy dog out of a declared Rabies-Infected Area. What document is mandatory?",
+      a: "Standard pet shop vaccination card only",
+      b: "Written Movement Permit issued by a Veterinary Authority",
+      gestureA: "XCROSS", labelA: "🙅 X-CROSS ARMS (Cross wrists in front of chest)",
+      gestureB: "SCUBA", labelB: "🤿 DO SCUBA TREND (Pinch nose + wave fish hand)",
+      correct: "B",
+      ref: "Ref: Animals Act 1953 (Act 647), Part III (Sections 31–36) — Control of movement in infected areas."
+    },
+    {
+      q: "Case 4 (Sections 5–9): A traveler brings an imported puppy across the border without an import permit or quarantine clearance. What is the maximum penalty?",
+      a: "Up to RM15,000 fine and/or 2 years imprisonment",
+      b: "RM500 compound on the spot",
+      gestureA: "CATEARS", labelA: "🐱 CAT EARS POSE (Both hands above your head)",
+      gestureB: "XCROSS", labelB: "🙅 X-CROSS ARMS (Cross wrists in front of chest)",
+      correct: "A",
+      ref: "Ref: Animals Act 1953 (Act 647) & Amendment Act A1452, Sections 5–9 — Import/Export & Quarantine regulations."
+    },
+    {
+      q: "Case 5 (Section 40 Emergency): Under a gazetted Rabies Order, can DVS officers destroy even a licensed dog if found roaming freely inside the infected zone?",
+      a: "Yes, Section 40 emergency orders override normal rules",
+      b: "No, licensed dogs are immune during Rabies outbreaks",
+      gestureA: "PEACE", labelA: "✌️ DOUBLE PEACE SIGNS (Both hands V-sign)",
+      gestureB: "67", labelB: "⚖️ DO THE 6-7 DANCE (Alternate hands up/down)",
+      correct: "A",
+      ref: "Ref: Animals Act 1953 (Act 647), Section 40 — Special powers during Rabies outbreak containment."
     }
   ];
 
-  let currentQ = 0, score = 0, handLandmarker, holdTimer = 0, lastGesture = 0;
+  let currentQ = 0, score = 0, handLandmarker, faceLandmarker;
+  let holdScore = 0, activeChoice = "";
+  let shakeCount = 0, lastHigher = "", scubaWaveCount = 0, lastFishX = null;
+
   const video = document.getElementById("webcam");
   const statusText = document.getElementById("statusText");
+  const motionBadge = document.getElementById("motionBadge");
+  const progressFill = document.getElementById("progressFill");
 
-  async function initMediaPipe() {
-    statusText.innerText = "Loading MediaPipe Hand AI...";
+  async function initAI() {
+    statusText.innerText = "Loading Hand & Face AI (takes ~5 seconds)...";
     const vision = await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/wasm");
+    
     handLandmarker = await HandLandmarker.createFromOptions(vision, {
-      baseOptions: {
-        modelAssetPath: "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task",
-        delegate: "GPU"
-      },
-      runningMode: "VIDEO",
-      numHands: 1
+      baseOptions: { modelAssetPath: "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task", delegate: "GPU" },
+      runningMode: "VIDEO", numHands: 2
     });
-    startCamera();
-  }
 
-  async function startCamera() {
+    faceLandmarker = await FaceLandmarker.createFromOptions(vision, {
+      baseOptions: { modelAssetPath: "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task", delegate: "GPU" },
+      runningMode: "VIDEO", numFaces: 1
+    });
+
     const stream = await navigator.mediaDevices.getUserMedia({ video: true });
     video.srcObject = stream;
     video.addEventListener("loadeddata", () => {
       document.getElementById("startBtn").style.display = "none";
       document.getElementById("quizArea").style.display = "block";
       loadQuestion();
-      predictWebcam();
+      predictLoop();
     });
   }
 
   function loadQuestion() {
+    holdScore = 0; activeChoice = ""; shakeCount = 0; lastHigher = ""; scubaWaveCount = 0; lastFishX = null;
+    progressFill.style.width = "0%";
+
     if (currentQ >= questions.length) {
-      document.getElementById("quizArea").innerHTML = `<h3>🎉 Mission Complete!</h3><p>Your Score: ${score} / ${questions.length}</p><button onclick="location.reload()">Play Again</button>`;
-      statusText.innerText = "All Act 647 scenarios cleared!";
+      document.getElementById("quizArea").innerHTML = `
+        <h3>🏆 Audit Passed! Final Score: ${score} / ${questions.length}</h3>
+        <p style="font-size:0.9em; color:#cbd5e1;">Primary Sources: Animals Act 1953 (Act 647), Animals (Amendment) Act 2013 (Act A1452), & DVS Malaysia Rabies Protocol.</p>
+        <button onclick="location.reload()">Play Again</button>`;
+      statusText.innerText = "All TikTok Law Challenges Complete!";
+      motionBadge.innerText = "🎉 VICTORY!";
       return;
     }
+
     const q = questions[currentQ];
-    document.getElementById("qTitle").innerText = `Scenario ${currentQ + 1} of ${questions.length}`;
+    document.getElementById("qTitle").innerText = `Case ${currentQ + 1} of ${questions.length}`;
     document.getElementById("qText").innerText = q.q;
+    document.getElementById("danceA").innerText = q.labelA;
     document.getElementById("textA").innerText = q.a;
+    document.getElementById("danceB").innerText = q.labelB;
     document.getElementById("textB").innerText = q.b;
   }
 
-  function countRaisedFingers(landmarks) {
-    let count = 0;
-    // Index (8 vs 6), Middle (12 vs 10), Ring (16 vs 14), Pinky (20 vs 18)
-    if (landmarks[8].y < landmarks[6].y) count++;
-    if (landmarks[12].y < landmarks[10].y) count++;
-    if (landmarks[16].y < landmarks[14].y) count++;
-    if (landmarks[20].y < landmarks[18].y) count++;
-    return count;
+  function dist(p1, p2) {
+    return Math.hypot(p1.x - p2.x, p1.y - p2.y);
   }
 
-  async function predictWebcam() {
+  function detectGesture(hands, face) {
+    if (!hands || hands.length < 2) return "NEED_2_HANDS";
+    
+    // Sort hands left-to-right on screen
+    const sorted = [...hands].sort((a, b) => a[0].x - b[0].x);
+    const h1 = sorted[0], h2 = sorted[1];
+
+    // 1. Check SCUBA TREND: One hand's index/thumb near nose tip (face landmark 1), other hand moving horizontally
+    if (face && face.length > 0) {
+      const noseTip = face[1];
+      const h1NearNose = dist(h1[8], noseTip) < 0.12 || dist(h1[4], noseTip) < 0.12;
+      const h2NearNose = dist(h2[8], noseTip) < 0.12 || dist(h2[4], noseTip) < 0.12;
+
+      if (h1NearNose || h2NearNose) {
+        const fishHand = h1NearNose ? h2 : h1;
+        if (lastFishX !== null && Math.abs(fishHand[9].x - lastFishX) > 0.03) {
+          scubaWaveCount++;
+        }
+        lastFishX = fishHand[9].x;
+        if (scubaWaveCount >= 2) return "SCUBA";
+        return "SCUBA_STARTING";
+      }
+
+      // 2. Check CAT EARS POSE: Both hands' fingertips above forehead (face landmark 10)
+      const foreheadY = face[10].y;
+      if (h1[12].y < foreheadY && h2[12].y < foreheadY) {
+        return "CATEARS";
+      }
+    }
+
+    // 3. Check X-CROSS ARMS: Wrists (landmark 0) are close together while middle fingertips (12) cross over
+    const wristDist = dist(h1[0], h2[0]);
+    if (wristDist < 0.18 && h1[12].x > h2[12].x) {
+      return "XCROSS";
+    }
+
+    // 4. Check DOUBLE PEACE SIGNS: Index (8) & Middle (12) up, Ring (16) & Pinky (20) down on both hands
+    const isPeace = (h) => h[8].y < h[6].y && h[12].y < h[10].y && h[16].y > h[14].y && h[20].y > h[18].y;
+    if (isPeace(h1) && isPeace(h2)) {
+      return "PEACE";
+    }
+
+    // 5. Check 6-7 DANCE: Alternating height difference between left & right hands
+    const diff = h1[9].y - h2[9].y;
+    if (diff > 0.07 && lastHigher !== "1") {
+      lastHigher = "1";
+      shakeCount++;
+    } else if (diff < -0.07 && lastHigher !== "2") {
+      lastHigher = "2";
+      shakeCount++;
+    }
+    if (shakeCount >= 2) return "67";
+
+    return "NONE";
+  }
+
+  async function predictLoop() {
     if (currentQ < questions.length) {
-      const results = handLandmarker.detectForVideo(video, performance.now());
+      const now = performance.now();
+      const handRes = handLandmarker.detectForVideo(video, now);
+      const faceRes = faceLandmarker.detectForVideo(video, now);
+
+      const hands = handRes.landmarks;
+      const face = faceRes.faceLandmarks ? faceRes.faceLandmarks[0] : null;
+      const detected = detectGesture(hands, face);
+
+      const q = questions[currentQ];
       document.getElementById("optA").classList.remove("active");
       document.getElementById("optB").classList.remove("active");
 
-      if (results.landmarks && results.landmarks.length > 0) {
-        const fingers = countRaisedFingers(results.landmarks[0]);
-        if (fingers === 1 || fingers === 2) {
-          document.getElementById(fingers === 1 ? "optA" : "optB").classList.add("active");
-          statusText.innerText = `Detected ${fingers} finger(s)... Hold steady!`;
-          
-          if (lastGesture === fingers) {
-            holdTimer++;
-            if (holdTimer > 35) { // ~1.5 seconds
-              checkAnswer(fingers);
-              holdTimer = 0;
-            }
-          } else {
-            lastGesture = fingers;
-            holdTimer = 0;
-          }
-        } else {
-          statusText.innerText = "Show 1 finger (A) or 2 fingers (B)";
-          holdTimer = 0;
-        }
+      if (detected === "NEED_2_HANDS") {
+        motionBadge.innerText = "⚠️ Show BOTH Hands";
+        statusText.innerText = "Raise both hands so the camera can track your dance!";
+        holdScore = Math.max(0, holdScore - 2);
+      } else if (detected === q.gestureA) {
+        motionBadge.innerText = `🔥 Detected: ${q.gestureA} (Option A)`;
+        document.getElementById("optA").classList.add("active");
+        statusText.innerText = "Keep doing the pose to lock Option A!";
+        advanceHold("A");
+      } else if (detected === q.gestureB) {
+        motionBadge.innerText = `🔥 Detected: ${q.gestureB} (Option B)`;
+        document.getElementById("optB").classList.add("active");
+        statusText.innerText = "Keep doing the pose to lock Option B!";
+        advanceHold("B");
+      } else if (detected === "SCUBA_STARTING") {
+        motionBadge.innerText = "🤿 Nose pinched! Now wave your other hand like a fish!";
       } else {
-        statusText.innerText = "Place your hand in front of the camera";
-        holdTimer = 0;
+        motionBadge.innerText = "👀 Waiting for dance move...";
+        statusText.innerText = "Perform Option A's pose OR Option B's pose!";
+        holdScore = Math.max(0, holdScore - 1);
       }
-      requestAnimationFrame(predictWebcam);
+
+      progressFill.style.width = `${Math.min(100, (holdScore / 35) * 100)}%`;
+      requestAnimationFrame(predictLoop);
     }
   }
 
-  function checkAnswer(choice) {
-    if (choice === questions[currentQ].correct) {
-      score++;
-      alert("✅ Correct! Good statutory compliance under Act 647.");
+  function advanceHold(choice) {
+    if (activeChoice === choice) {
+      holdScore += 1.5;
+      if (holdScore >= 35) {
+        const q = questions[currentQ];
+        if (choice === q.correct) {
+          score++;
+          alert(`✅ CORRECT!\n\n${q.ref}`);
+        } else {
+          alert(`❌ INCORRECT!\n\n${q.ref}`);
+        }
+        currentQ++;
+        loadQuestion();
+      }
     } else {
-      alert("❌ Incorrect! Review Act 647 provisions and try the next scenario.");
+      activeChoice = choice;
+      holdScore = 5;
     }
-    currentQ++;
-    loadQuestion();
   }
 
-  document.getElementById("startBtn").addEventListener("click", initMediaPipe);
+  document.getElementById("startBtn").addEventListener("click", initAI);
 </script>
 </body>
 </html>
